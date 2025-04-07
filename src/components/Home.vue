@@ -1,99 +1,151 @@
 <template>
-    <div class="container mt-4">
-      <h1 class="mb-4">Mis Tareas</h1>
-  
-      <form @submit.prevent="crearTarea" class="mb-3">
-        <input v-model="nuevaTarea.nombre" placeholder="Nombre de tarea" class="form-control mb-2" />
-        <textarea v-model="nuevaTarea.notas" placeholder="Notas" class="form-control mb-2"></textarea>
-        <button class="btn btn-primary" type="submit">Agregar</button>
-      </form>
-  
-      <div v-if="tareas.length === 0">No hay tareas aún.</div>
-  
-      <ul class="list-group">
-        <li v-for="tarea in tareas" :key="tarea.id" class="list-group-item d-flex justify-content-between align-items-start">
-          <div class="me-auto">
-            <strong>{{ tarea.nombre }}</strong>
-            <br />
-            <small>{{ tarea.notas }}</small>
-          </div>
-          <div>
-            <button class="btn btn-sm btn-warning me-2" @click="seleccionarEdicion(tarea)">Editar</button>
-            <button class="btn btn-sm btn-danger" @click="borrarTarea(tarea.id)">Eliminar</button>
-          </div>
-        </li>
-      </ul>
-  
-      <div v-if="modoEdicion" class="mt-4">
-        <h3>Editar tarea</h3>
-        <form @submit.prevent="guardarEdicion">
-          <input v-model="tareaEditada.nombre" placeholder="Nuevo nombre" class="form-control mb-2" />
-          <textarea v-model="tareaEditada.notas" placeholder="Nuevas notas" class="form-control mb-2"></textarea>
-          <button class="btn btn-success" type="submit">Guardar</button>
-          <button class="btn btn-secondary ms-2" @click="cancelarEdicion">Cancelar</button>
-        </form>
+  <div class="container mt-4">
+    <h1 class="mb-4">Mis Tareas</h1>
+
+    <form @submit.prevent="crearTarea" class="mb-3">
+      <input v-model="nuevaTarea.nombre" placeholder="Nombre de tarea" class="form-control mb-2" />
+      <textarea v-model="nuevaTarea.notas" placeholder="Notas" class="form-control mb-2"></textarea>
+      <button class="btn btn-primary" type="submit">Agregar</button>
+    </form>
+
+    <div v-if="tareas.length === 0">No hay tareas aún.</div>
+
+    <div class="row">
+      <div class="col">
+        <h3>Pendiente</h3>
+        <draggable :modelValue="tareasPendientes" @update:modelValue="onTareasUpdate" group="tareas" itemkey="id">
+          <template #default="{ element }">
+            <div :key="element.id" class="list-group-item">
+              <div class="me-auto">
+                <strong>{{ element.nombre }}</strong>
+                <br />
+                <small>{{ element.notas }}</small>
+              </div>
+              <button class="btn btn-sm btn-warning me-2" @click="seleccionarEdicion(tarea)">Editar</button>
+              <button class="btn btn-sm btn-danger" @click="borrarTarea(element.id)">Eliminar</button>
+            </div>
+          </template>
+        </draggable>
       </div>
-      <div>
-        <button @click="cerrarSesion" class="btn btn-outline-secondary mt-3">Cerrar sesión</button>
+
+      <div class="col">
+        <h3>En Progreso</h3>
+        <draggable :modelValue="tareasEnProgreso" @update:modelValue="onTareasUpdate" group="tareas" itemkey="id">
+          <template #default="{ element }">
+            <div :key="element.id" class="list-group-item">
+              <div class="me-auto">
+                <strong>{{ element.nombre }}</strong>
+                <br />
+                <small>{{ element.notas }}</small>
+              </div>
+              <button class="btn btn-sm btn-warning me-2" @click="seleccionarEdicion(tarea)">Editar</button>
+              <button class="btn btn-sm btn-danger" @click="borrarTarea(element.id)">Eliminar</button>
+            </div>
+          </template>
+        </draggable>
+      </div>
+
+      <div class="col">
+        <h3>Completada</h3>
+        <draggable :modelValue="tareasCompletadas" @update:modelValue="onTareasUpdate" group="tareas" itemkey="id">
+          <template #default="{ element }">
+            <div :key="element.id" class="list-group-item">
+              <div class="me-auto">
+                <strong>{{ element.nombre }}</strong>
+                <br />
+                <small>{{ element.notas }}</small>
+              </div>
+              <button class="btn btn-sm btn-warning me-2" @click="seleccionarEdicion(tarea)">Editar</button>
+              <button class="btn btn-sm btn-danger" @click="borrarTarea(element.id)">Eliminar</button>
+            </div>
+          </template>
+        </draggable>
       </div>
     </div>
-  </template>
-  
-  <script setup>
-  import { ref, onMounted } from 'vue'
-  import { agregarTarea, getTareas, eliminarTarea, editarTarea } from '../firebase/firebase'
-  import { useRouter } from 'vue-router'
-  import { getAuth, signOut } from 'firebase/auth'
-  
-  const tareas = ref([])
-  const nuevaTarea = ref({ nombre: '', notas: '' })
-  const modoEdicion = ref(false)
-  const tareaEditada = ref({ id: '', nombre: '', notas: '' })
-  
-  const cargarTareas = async () => {
-    tareas.value = await getTareas()
-  }
-  
-  const crearTarea = async () => {
-    if (!nuevaTarea.value.nombre) return
-    await agregarTarea(nuevaTarea.value.nombre, nuevaTarea.value.notas)
-    nuevaTarea.value = { nombre: '', notas: '' }
-    await cargarTareas()
-  }
-  
-  const borrarTarea = async (id) => {
-    await eliminarTarea(id)
-    await cargarTareas()
-  }
-  
-  const seleccionarEdicion = (tarea) => {
-    modoEdicion.value = true
-    tareaEditada.value = { ...tarea }
-  }
-  
-  const cancelarEdicion = () => {
-    modoEdicion.value = false
-    tareaEditada.value = { id: '', nombre: '', notas: '' }
-  }
-  
-  const guardarEdicion = async () => {
-    await editarTarea(tareaEditada.value.id, tareaEditada.value.nombre, tareaEditada.value.notas)
-    cancelarEdicion()
-    await cargarTareas()
-  }
-  
-  // Cerrar sesión
-  const router = useRouter()
-  const cerrarSesion = async () => {
-    await signOut(getAuth())
-    router.push('/login')
-  }
-  
-  onMounted(() => {
-    cargarTareas()
-  })
-  </script>
-  
+
+    <div v-if="modoEdicion" class="mt-4">
+      <h3>Editar tarea</h3>
+      <form @submit.prevent="guardarEdicion">
+        <input v-model="tareaEditada.nombre" placeholder="Nuevo nombre" class="form-control mb-2" />
+        <textarea v-model="tareaEditada.notas" placeholder="Nuevas notas" class="form-control mb-2"></textarea>
+        <button class="btn btn-success" type="submit">Guardar</button>
+        <button class="btn btn-secondary ms-2" @click="cancelarEdicion">Cancelar</button>
+      </form>
+    </div>
+
+    <div>
+      <button @click="cerrarSesion" class="btn btn-outline-secondary mt-3">Cerrar sesión</button>
+    </div>
+  </div>
+</template>
+
+<script setup>
+import { ref, onMounted } from 'vue'
+import draggable from 'vuedraggable'
+import { agregarTarea, getTareas, eliminarTarea, editarTarea } from '../firebase/firebase'
+import { useRouter } from 'vue-router'
+import { getAuth, signOut } from 'firebase/auth'
+
+const tareas = ref([]) 
+const nuevaTarea = ref({ nombre: '', notas: '' })
+const tareasPendientes = ref([]) 
+const tareasEnProgreso = ref([]) 
+const tareasCompletadas = ref([]) 
+const modoEdicion = ref(false)
+const tareaEditada = ref({ id: '', nombre: '', notas: '' })
+
+const cargarTareas = async () => {
+  tareas.value = await getTareas()
+ 
+  tareasPendientes.value = tareas.value.filter(tarea => tarea.estado === 'pendiente')
+  tareasEnProgreso.value = tareas.value.filter(tarea => tarea.estado === 'progreso')
+  tareasCompletadas.value = tareas.value.filter(tarea => tarea.estado === 'completada')
+}
+
+const crearTarea = async () => {
+  if (!nuevaTarea.value.nombre) return
+  await agregarTarea(nuevaTarea.value.nombre, nuevaTarea.value.notas, 'pendiente') // Estado pendiente por defecto
+  nuevaTarea.value = { nombre: '', notas: '' }
+  await cargarTareas()
+}
+
+const borrarTarea = async (id) => {
+  await eliminarTarea(id)
+  await cargarTareas()
+}
+
+const seleccionarEdicion = (tarea) => {
+  modoEdicion.value = true
+  tareaEditada.value = { ...tarea }
+}
+
+const cancelarEdicion = () => {
+  modoEdicion.value = false
+  tareaEditada.value = { id: '', nombre: '', notas: '' }
+}
+
+const guardarEdicion = async () => {
+  await editarTarea(tareaEditada.value.id, tareaEditada.value.nombre, tareaEditada.value.notas)
+  cancelarEdicion()
+  await cargarTareas()
+}
+
+const router = useRouter()
+
+const cerrarSesion = async () => {
+  await signOut(getAuth())
+  router.push('/login')
+}
+
+const onTareasUpdate = () => {
+  // Aquí puedes actualizar el estado de las tareas después de un cambio
+  console.log('Tareas actualizadas');
+}
+
+onMounted(() => {
+  cargarTareas()
+})
+</script>  
   <style scoped>
 .container {
   max-width: 600px;
@@ -199,9 +251,5 @@ button.btn-secondary:hover {
 
 .list-group-item:hover {
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-}
-
-.text-danger {
-  color: red;
 }
 </style>
