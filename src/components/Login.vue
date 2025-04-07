@@ -67,11 +67,11 @@
 <script setup>
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
-import '../css/login.css'
-import { loginUsuario, registerUsuario } from '../firebase/firebase.js'
+import '../css/login.css'  
+import { loginUsuario, registerUsuario } from '../firebase/firebase.js' 
 
-const isLogin = ref(true)
-const router = useRouter()
+const isLogin = ref(true) 
+const router = useRouter() 
 
 const formData = ref({
   email: '',
@@ -89,10 +89,9 @@ const handleSubmit = async () => {
         formData.value.password,
       )
     }
-    // Redirigir al home después de login o registro exitoso
     router.push('/')
   } catch (err) {
-    formData.value.error = err.message
+    formData.value.error = err.message 
     console.error('Error en autenticación:', err.message)
   }
 }
