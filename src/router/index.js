@@ -1,7 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import Login from '../components/Login.vue'
 import Home from '../components/Home.vue'
-import { checkAuthState } from '../firebase/firebase.js' // asegúrate de que esta función ya esté
+import { checkAuthState } from '../firebase/firebase.js'
 
 const routes = [
   {
@@ -22,7 +22,7 @@ const router = createRouter({
   routes
 })
 
-// Guard para rutas protegidas
+// Guardar para rutas protegidas
 router.beforeEach(async (to, from, next) => {
   const requiresAuth = to.matched.some(record => record.meta.requiresAuth)
 

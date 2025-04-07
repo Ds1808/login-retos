@@ -46,8 +46,8 @@ export const checkAuthState = () => {
     const auth = getAuth()
     return new Promise((resolve, reject) => {
       const unsubscribe = onAuthStateChanged(auth, (user) => {
-        unsubscribe() // evitamos múltiples llamadas
-        resolve(user) // si hay usuario, lo retorna
+        unsubscribe() 
+        resolve(user) // si hay un usuario lo retorna
       }, reject)
     })
   }
@@ -60,7 +60,7 @@ export const checkAuthState = () => {
     const querySnapshot = await getDocs(q)
     return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
   }
-  // Agregar tarea
+  // Agregar tarea en U
     export const agregarTarea = async (nombre, notas) => {
     const auth = getAuth()
     const user = auth.currentUser
@@ -71,7 +71,7 @@ export const checkAuthState = () => {
     })
   }
   
-  // Eliminar tarea
+  // Eliminar tarea de U
   export const eliminarTarea = async (id) => {
     await deleteDoc(doc(db, 'tareas', id))
   }

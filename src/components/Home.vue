@@ -33,6 +33,9 @@
           <button class="btn btn-secondary ms-2" @click="cancelarEdicion">Cancelar</button>
         </form>
       </div>
+      <div>
+        <button @click="cerrarSesion" class="btn btn-outline-secondary mt-3">Cerrar sesión</button>
+      </div>
     </div>
   </template>
   
